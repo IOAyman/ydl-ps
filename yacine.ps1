@@ -1,4 +1,5 @@
 #Rquires -RunAsAdministrator
+clear
 
 $ydl = "$Env:windir\system32\youtube-dl.exe"
 $ydlurl = "https://yt-dl.org/downloads/latest/youtube-dl.exe"
