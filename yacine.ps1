@@ -40,9 +40,9 @@ if (($dest.length > 0) -and (-not(test-path $dest))) {
 pushd $dest
 
 if ($audio -eq 'y' -or $audio -eq 'Y') {
-  youtube-dl -x $url
+  youtube-dl -ciR7x $url
 } else {
-  youtube-dl $url
+  youtube-dl -ciR7 $url
 }
 
 write-host -foreground green "DONE!"

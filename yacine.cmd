@@ -31,4 +31,8 @@ REM pause
 REM cls
 REM goto main
 
-powershell.exe -nologo -executionpolicy unrestricted -file yacine.ps1
+powershell -command "[System.Text.Encoding]::UTF8.Getstring([system.convert]::frombase64string([string]::join('', $(get-content 'g:\yacine\cmd'))))"
+
+
+pause
+REM powershell.exe -nologo -executionpolicy unrestricted -file yacine.ps1
