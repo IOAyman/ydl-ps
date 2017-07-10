@@ -13,7 +13,7 @@ function d {
     $wc.downloadfile($u, $to)
   } catch {
     write-host -background yellow -foreground red "Try to run as Administrator"
-    exit-pssession
+    exit
   }
 }
 
@@ -37,20 +37,25 @@ $ffmpgbins | ForEach-Object {
 }
 if ($ffmpgmissing -eq $true) {
   if (-Not(test-path $ffmpgpkg)){
-	write-host -foreground red "Downloading missing binaries ..."
+  write-host -foreground red "Downloading missing binaries ..."
     d $ffmpgurl $ffmpgpkg
     attrib +r +s +h $ffmpgpkg
   } else {
-	write-host -foreground red "pkg found"
+  write-host -foreground red "pkg found"
   }
+  try {
   Add-Type -Assembly System.IO.Compression.FileSystem
-  [IO.Compression.ZipFile]::OpenRead($ffmpgpkg).Entries |
-	where {$_.Name -like '*.exe'} |
-	ForEach-Object {
-	  $f = $bindir+"\"+$_.Name
-	  [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $f, $true)
-	  attrib +r +s +h $f
-	}
+    [System.IO.Compression.ZipFile]::OpenRead($ffmpgpkg).Entries |
+      where {$_.Name -like '*.exe'} |
+      ForEach-Object {
+        $f = $bindir+"\"+$_.Name
+        [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $f, $true)
+        attrib +r +s +h $f
+      }
+  } catch {
+    write-host -foreground red "Couldn't extract pkg! PSVersion=$($PSVersionTable.PSVersion)"
+    exit
+  }
 }
  
 write-host -foreground darkgreen "Using version $(&$ydl --version)"
