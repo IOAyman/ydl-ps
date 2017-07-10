@@ -54,9 +54,9 @@ if ($ffmpgmissing -eq $true) {
 }
  
 write-host -foreground darkgreen "Using version $(&$ydl --version)"
-$url = "https://www.youtube.com/watch?v=1Ai7p2BscvI" #read-host "Paste in the URL"
-$audio = "y" #read-host "Download the audio files only? [y/N]"
-$dest = "" #read-host "Where to save?  [current directory by default] "
+$url = read-host "Paste in the URL"
+$audio = read-host "Download the audio files only? [y/N]"
+$dest = read-host "Where to save?  [current directory by default] "
 
 if (($dest.length > 0) -and (-not(test-path $dest))) {
   new-item -path $dest -force
