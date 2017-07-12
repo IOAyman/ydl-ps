@@ -1,10 +1,14 @@
 $bindir = "$env:USERPROFILE\.bin"
-$ydl = "$bindir\.youtube-dl.exe"
-$ydlcmd = @("-c", "-i", "-R7", "--ffmpeg-location=$bindir")
-$ydlurl = "https://yt-dl.org/downloads/latest/youtube-dl.exe"
-$ffmpgbins = @('ffmpeg.exe', 'ffprobe.exe', 'ffplay.exe')
-$ffmpgpkg = "$bindir\.ffmpgpkg.zip"
-$ffmpgurl = "http://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.3.2-win64-static.zip"
+$ydl = @{}
+$ydl["bin"] = "$bindir\.youtube-dl.exe"
+$ydl["url"] = "https://yt-dl.org/downloads/latest/youtube-dl.exe"
+$ydl["hash.alg"] = "sha256"
+$ydl["hash.sum"] = "6b37a566e9f5726b1af5626c5ce912bbc5070502659e5017e83393f09a3670c9".ToUpper()
+$ydl["cmd"] = @("-c", "-i", "-R7", "--ffmpeg-location=$bindir")
+$ffmpg = @{}
+$ffmpg["bin"] = @("ffmpeg.exe", "ffprobe.exe", "ffplay.exe")
+$ffmpg["pkg"] = "$bindir\.ffmpgpkg.zip"
+$ffmpg["url"] = "http://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.3.2-win64-static.zip"
 
 function d {
   param([string]$u, [string]$to)
@@ -21,14 +25,14 @@ if (-Not(test-path $bindir)){
   New-Item -Path $bindir -Force -ItemType Directory
   attrib +r +s +h $bindir
 }
-if (-Not(test-path $ydl)){
+if (-Not(Test-Path $ydl["bin"])){
   write-host -foreground red "youtube-dl not found!"
   write-host -foreground red "Attempting to download ..."
-  d $ydlurl $ydl
-  attrib +r +s +h $ydl
+  d $ydl["url"] $ydl["bin"]
+  attrib +r +s +h $ydl["bin"]
 }
 $ffmpgmissing = $false
-$ffmpgbins | ForEach-Object {
+$ffmpg["bin"] | ForEach-Object {
   if (-Not(test-path $bindir"\"$_)){
     $ffmpgmissing = $true
     write-host -foreground red "some binaries are missing!"
@@ -36,17 +40,17 @@ $ffmpgbins | ForEach-Object {
   }
 }
 if ($ffmpgmissing -eq $true) {
-  if (-Not(test-path $ffmpgpkg)){
+  if (-Not(test-path $ffmpg["pkg"])){
   write-host -foreground red "Downloading missing binaries ..."
-    d $ffmpgurl $ffmpgpkg
-    attrib +r +s +h $ffmpgpkg
+    d $ffmpg["url"] $ffmpg["pkg"]
+    attrib +r +s +h $ffmpg["pkg"]
   } else {
   write-host -foreground red "pkg found"
   }
   try {
   Add-Type -Assembly System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::OpenRead($ffmpgpkg).Entries |
-      where {$_.Name -like '*.exe'} |
+    [System.IO.Compression.ZipFile]::OpenRead($ffmpg["pkg"]).Entries |
+      where {$_.Name -like "*.exe"} |
       ForEach-Object {
         $f = $bindir+"\"+$_.Name
         [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, $f, $true)
@@ -54,11 +58,12 @@ if ($ffmpgmissing -eq $true) {
       }
   } catch {
     write-host -foreground red "Couldn't extract pkg! PSVersion=$($PSVersionTable.PSVersion)"
+    read-host
     exit
   }
 }
  
-write-host -foreground darkgreen "Using version $(&$ydl --version)"
+write-host -foreground darkgreen "Using version $(&$ydl["bin"] --version)"
 $url = read-host "Paste in the URL"
 $audio = read-host "Download the audio files only? [y/N]"
 $dest = read-host "Where to save?  [current directory by default] "
@@ -70,10 +75,10 @@ if (($dest.length > 0) -and (-not(test-path $dest))) {
 }
 pushd $dest
 
-if ($audio -eq 'y' -or $audio -eq 'Y') {
-  $ydlcmd+=@("-x", "--audio-format=mp3", $url)
+if ($audio -eq "y" -or $audio -eq "Y") {
+  $ydl["cmd"]+=@("-x", "--audio-format=mp3", $url)
 }
-&$ydl $ydlcmd
+&$ydl["bin"] $ydl["cmd"]
 
 write-host -foreground green "DONE!"
 read-host
